@@ -99,4 +99,3 @@ BitField BitField::operator~(){
 	}
 	return a;
 }
-
