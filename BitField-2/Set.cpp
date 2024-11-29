@@ -44,6 +44,8 @@ bool Set::operator!= (const Set& s) const {
     return !(*this == s);
 }
 Set& Set::operator=(const Set& s) {
+    _maxPower = s._maxPower;
+    _bitField = s._bitField;
     return *this;
 }
 Set Set::operator+ (const uint64_t Elem) {
@@ -70,15 +72,33 @@ Set Set::operator+ (const Set& s) {
     return A;
 }
 Set Set::operator* (const Set& s) {
-    Set a(_bitField & s._bitField);
+    Set a(max(s._maxPower, _maxPower));
+    a._bitField = _bitField & s._bitField;
     return a;
 }
 Set Set::operator~ () {
-    Set a(~_bitField);
+    //Set a(~_bitField);
+    Set a(_maxPower);
+    a._bitField = ~_bitField;
     return a;
 }
 std::vector<uint64_t> Set::GetPrimary() {
-    return std::vector<uint64_t>();
+    vector<uint64_t> a;
+    uint64_t* is_prime = new uint64_t[_maxPower+1];
+    for(int i = 2;i!=_maxPower+1;i++){
+    is_prime[i] = i%2 == 0 ?  false : true;
+    is_prime[i] = i % 3 == 0? false : true;
+    is_prime[i] = i % 5 == 0? false : true;
+    }
+    is_prime[0] = false;
+    is_prime[1] = false; 
+    for(int i = 2;i!=_maxPower;i++){
+        if(is_prime[i] == true){
+            if(IsMember(i) == true) a.push_back(i);
+        }
+    }
+        return a;
+    
 }
 istream& operator>>(istream& istr, Set& s)
 {
