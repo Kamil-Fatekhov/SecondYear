@@ -1,13 +1,13 @@
 #include "Set.h"
 
 
-Set::Set(size_t mp) : _bitField(10) {
-    _maxPower = mp;
+Set::Set(size_t mp) : _bitField(mp), _maxPower(mp) {
+
 }
-Set::Set(const Set& s) : _bitField(10) {
-    _maxPower = s.GetMaxPower();
+Set::Set(const Set& s) : _maxPower(s.GetMaxPower()),_bitField(s._bitField) {
+
 }
-Set::Set(const BitField& bf) : _bitField(10) {
+Set::Set(const BitField& bf) : _bitField(bf), _maxPower(bf.GetLength()) {
 
 }
 
@@ -83,22 +83,17 @@ Set Set::operator~ () {
     return a;
 }
 std::vector<uint64_t> Set::GetPrimary() {
-    vector<uint64_t> a;
-    uint64_t* is_prime = new uint64_t[_maxPower+1];
-    for(int i = 2;i!=_maxPower+1;i++){
-    is_prime[i] = i%2 == 0 ?  false : true;
-    is_prime[i] = i % 3 == 0? false : true;
-    is_prime[i] = i % 5 == 0? false : true;
-    }
-    is_prime[0] = false;
-    is_prime[1] = false; 
-    for(int i = 2;i!=_maxPower;i++){
-        if(is_prime[i] == true){
-            if(IsMember(i) == true) a.push_back(i);
+    bool isPrime;
+    std::vector<uint64_t> prime_numbers;
+    prime_numbers.push_back(1);
+    for (int i = 2; i < _maxPower; i++) {
+        isPrime = true;
+        for (int j = 2; j < i - 1; j++) {
+            if (i % j == 0) isPrime = false;
         }
+        if (isPrime == true && IsMember(i) == true) prime_numbers.push_back(i);
     }
-        return a;
-    
+    return prime_numbers;
 }
 istream& operator>>(istream& istr, Set& s)
 {
