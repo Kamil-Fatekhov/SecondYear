@@ -1,3 +1,4 @@
+
 #include "BitField.h"
 
 size_t BitField::GetMemIndex(size_t n) const{
@@ -99,4 +100,3 @@ BitField BitField::operator~(){
 	}
 	return a;
 }
-

@@ -172,4 +172,3 @@ TEST(TestGroupName, Subtest_10) {
 
   EXPECT_EQ(1, set1 != set2);
 }
-
