@@ -1,6 +1,7 @@
 
 #include "BitField.h"
 
+
 size_t BitField::GetMemIndex(size_t n) const{
     return (n / (sizeof(uint16_t) * 8));
 }
@@ -100,3 +101,5 @@ BitField BitField::operator~(){
 	}
 	return a;
 }
+
+
