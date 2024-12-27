@@ -6,19 +6,73 @@
 #include <string>
 class TFormula {
 	Stack<double> nums;
-	Stack<char> operators;
+	Stack<string> operators;
 	string Postfix;
 	string Infix;
+	vector<string> splitExpression;
+	vector<string> postfix;
 public:
-	string getPostfix() {
-		return Postfix;
+	void getPostfix() {
+		for (size_t i = 0; i < postfix.size(); i++) {
+			cout << postfix[i];
+		}
+		cout << endl;
+	}
+	int getPrecedence(string op) {
+		if (op == "(") return 1;
+		if (op == ")") return 2;
+		if (op == "+" || op == "-") {
+			return 3;
+		}
+		else if (op == "*" || op == "/") {
+			return 4;
+		}
+		else return 0;
 	}
 	TFormula() {
 		cout << "Введите выражение в инфиксной форме" << endl;
 		cin >> Infix;
+		string tmp = "";
+		// Создать словарь для хранения значений букв
+		map<char, int> values;
+
+		// Запросить значения букв у пользователя
+		for (char c : Infix) {
+			if (isalpha(c)) {
+				cout << "Введите значение для буквы " << c << ": ";
+				int value;
+				cin >> value;
+				values[c] = value;
+			}
+		}
+
+		// Преобразовать выражение в цифры
+		string result;
+		for (char c : Infix) {
+			if (isalpha(c)) {
+				result += to_string(values[c]);
+			}
+			else {
+				result += c;
+			}
+		}
+		Infix = result;
+		for (char c : Infix) {
+			if (isdigit(c)) {
+				tmp += c;
+			}
+			else {
+				if(tmp!="")splitExpression.push_back(tmp);
+				tmp = "";
+				tmp += c;
+				splitExpression.push_back(tmp);
+				tmp = "";
+			}
+		}
+		splitExpression.push_back(tmp);
 	}
 	TFormula(const TFormula& a) : Postfix(a.Postfix), Infix(a.Infix) {
-		
+
 	}
 	bool FormulaChecker() {
 		int index = 1;
@@ -29,97 +83,112 @@ public:
 			}
 			if (c == ')') {
 				if (nums.isEmpty()) {
-					cout << 0 << ' ' << index++<<endl;
+					cout << 0 << ' ' << index++ << endl;
 					errors++;
 					continue;
 				}
-				cout << nums.Top() << ' ' << index++<<endl;
+				cout << nums.Top() << ' ' << index++ << endl;
 				nums.Pop();
 			}
 		}
 		if (!nums.isEmpty()) {
 			while (!nums.isEmpty()) {
-				cout << nums.Top() << ' ' << 0<<endl;
+				cout << nums.Top() << ' ' << 0 << endl;
 				nums.Pop();
 				errors++;
 			}
 		}
-		cout << "errors: " << errors<<endl;
+		cout << "errors: " << errors << endl;
 		return errors == 0 ? true : false;
 	}
-	string FormulaConverter() {
+	void FormulaConverter() {
 		if (!FormulaChecker()) throw "incorrect Postfix";
-		map<char, int> myMap;
-		myMap.emplace('(', 0);
-		myMap.emplace(')', 1);
-		myMap.emplace('+', 2);
-		myMap.emplace('-', 2);
-		myMap.emplace('*', 3);
-		myMap.emplace('/', 3);
-		for (char c : Infix) {
-			auto it = myMap.find(c);
-			if (it == myMap.end()) {
-				Postfix += c; continue;
+		for (string& token : splitExpression) {
+			if (getPrecedence(token) == 0) {
+				postfix.push_back(token); continue;
+			}
+			if (getPrecedence(token) == 1) {
+				operators.Push(token); continue;
 			}
 			if (operators.isEmpty()) {
-				operators.Push(c); continue;
+				operators.Push(token); continue;
 			}
-			if (myMap[c] == 1) {
-				while (myMap[operators.Top()] != 0) {
-					Postfix += operators.Top();
+			if (getPrecedence(token) > getPrecedence(operators.Top())) {
+				operators.Push(token); continue;
+			}
+			if (getPrecedence(token) == 2) {
+				while (getPrecedence(operators.Top()) != 1) {
+					postfix.push_back(operators.Top());
 					operators.Pop();
 				}
-				operators.Pop(); continue;
-			}
-			if (myMap[c] == 0) {
-				operators.Push(c); continue;
-			}
-			if (myMap[c] > myMap[operators.Top()]) {
-				operators.Push(c); continue;
+				operators.Pop();
+				continue;
 			}
 			else {
-					while (myMap[operators.Top()] >= myMap[c]) {
-						Postfix += operators.Top();
-						operators.Pop();
-						if (operators.isEmpty()) break;
-					}
-				operators.Push(c); continue;
+				while (getPrecedence(operators.Top()) >= getPrecedence(token)) {
+					postfix.push_back(operators.Top());
+					operators.Pop();
+					if (operators.isEmpty()) break;
+				}
+				operators.Push(token);
+				continue;
 			}
 		}
 		while (!operators.isEmpty()) {
-			Postfix += operators.Top();
+			postfix.push_back(operators.Top());
 			operators.Pop();
 		}
-		return Postfix;
 	}
 	double FormulaCalculator() {
 		double res = double();
-		for (char c : Postfix) {
+		double tmp;
+		for (string& token : postfix) {
 			double op1 = double();
 			double op2 = double();
-			switch (c) {
-			default:
-				if ((int)c < 48 || (int)c>57) throw "its not a number";
-				nums.Push(c - '0'); continue;
-			case '+' :
-				op2 = nums.Top(); nums.Pop();
-				op1 = nums.Top(); nums.Pop();
-				nums.Push(op1 + op2); continue;
-			case '-':
-				op2 = nums.Top(); nums.Pop();
-				op1 = nums.Top(); nums.Pop();
-				nums.Push(op1 - op2); continue;
-			case '*':
-				op2 = nums.Top(); nums.Pop();
-				op1 = nums.Top(); nums.Pop();
-				nums.Push(op1 * op2); continue;
-			case '/':
-				op2 = nums.Top(); nums.Pop();
-				op1 = nums.Top(); nums.Pop();
-				nums.Push(op1 / op2); continue;
+			if (getPrecedence(token) == 0) {
+				tmp = stoi(token);
+				nums.Push(tmp);
+				continue;
+			}
+			if (token == "+") {
+				op2 = nums.Top();
+				nums.Pop();
+				op1 = nums.Top();
+				nums.Pop();
+				tmp = op1 + op2;
+				nums.Push(tmp);
+				continue;
+			}
+			if (token == "-") {
+				op2 = nums.Top();
+				nums.Pop();
+				op1 = nums.Top();
+				nums.Pop();
+				tmp = op1 - op2;
+				nums.Push(tmp);
+				continue;
+			}
+			if (token == "*") {
+				op2 = nums.Top();
+				nums.Pop();
+				op1 = nums.Top();
+				nums.Pop();
+				tmp = op1 * op2;
+				nums.Push(tmp);
+				continue;
+			}
+			if (token == "/") {
+				op2 = nums.Top();
+				nums.Pop();
+				op1 = nums.Top();
+				nums.Pop();
+				tmp = op1 / op2;
+				nums.Push(tmp);
+				continue;
 			}
 		}
-		res = nums.Top(); nums.Pop();
-		return res;
+			res = nums.Top(); nums.Pop();
+			return res;
 	}
 };
+		
