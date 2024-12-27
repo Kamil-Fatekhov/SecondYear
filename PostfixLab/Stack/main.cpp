@@ -16,9 +16,10 @@ int main() {
     std::cout << "Stack size: " << myStack.size() << std::endl;
 
     TFormula a;
-    a.FormulaChecker();
+  //  a.FormulaChecker();
     a.FormulaConverter();
     //cout << a.getPostfix() << endl;
+    //a.getSplit();
     a.getPostfix();
     cout << a.FormulaCalculator();
     return 0;
