@@ -1,5 +1,5 @@
 #pragma once
-#include "Stack.h"
+#include "TStack.h"
 #include <map>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +9,16 @@ class TFormula {
 	Stack<string> operators;
 	string Postfix;
 	string Infix;
+	Stack<char> lexems;
 	vector<string> splitExpression;
 	vector<string> postfix;
 public:
+	void getSplit(){
+		for (size_t i = 0; i < splitExpression.size(); i++) {
+			cout << splitExpression[i]<<i<<endl;
+		}
+		cout << endl;
+	}
 	void getPostfix() {
 		for (size_t i = 0; i < postfix.size(); i++) {
 			cout << postfix[i];
@@ -30,33 +37,51 @@ public:
 		else return 0;
 	}
 	TFormula() {
-		cout << "Введите выражение в инфиксной форме" << endl;
-		cin >> Infix;
+		cout << "Input infix" << endl;
+		getline(cin, Infix);
+		string space;
+		int count = 0;
+		for(char c : Infix){
+			if(c=='('){ count = 1;
+			space+=c;
+			continue;
+			}
+			else if(c!=')') count = 0;
+			if (c == ')' && count == 1) throw "error";
+			if(c!= ' '){
+				space+=c;
+				continue;
+			}
+		}
+		Infix = space;
+		//cout<<Infix;
 		string tmp = "";
-		// Создать словарь для хранения значений букв
+		// Г‘Г®Г§Г¤Г ГІГј Г±Г«Г®ГўГ Г°Гј Г¤Г«Гї ГµГ°Г Г­ГҐГ­ГЁГї Г§Г­Г Г·ГҐГ­ГЁГ© ГЎГіГЄГў
 		map<char, int> values;
 
-		// Запросить значения букв у пользователя
+		// Г‡Г ГЇГ°Г®Г±ГЁГІГј Г§Г­Г Г·ГҐГ­ГЁГї ГЎГіГЄГў Гі ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гї
 		for (char c : Infix) {
 			if (isalpha(c)) {
-				cout << "Введите значение для буквы " << c << ": ";
-				int value;
+				cout << "input value of " << c << ": ";
+				 float value;
 				cin >> value;
 				values[c] = value;
 			}
 		}
-
-		// Преобразовать выражение в цифры
+		// ГЏГ°ГҐГ®ГЎГ°Г Г§Г®ГўГ ГІГј ГўГ»Г°Г Г¦ГҐГ­ГЁГҐ Гў Г¶ГЁГґГ°Г»
 		string result;
 		for (char c : Infix) {
 			if (isalpha(c)) {
+				cout<<c;
 				result += to_string(values[c]);
+				cout<<result;
 			}
 			else {
 				result += c;
 			}
 		}
 		Infix = result;
+		cout<<Infix;
 		for (char c : Infix) {
 			if (isdigit(c)) {
 				tmp += c;
@@ -70,11 +95,24 @@ public:
 			}
 		}
 		splitExpression.push_back(tmp);
+		if(splitExpression.back()=="") splitExpression.pop_back();
 	}
 	TFormula(const TFormula& a) : Postfix(a.Postfix), Infix(a.Infix) {
 
 	}
 	bool FormulaChecker() {
+		size_t count = 0;
+		for(char c : Infix){
+			if(c == '+' || c == '-' || c=='/'||c=='*'){
+				if(count == 0){
+				count++;
+				cout<<count;
+				continue;
+				}
+				else throw "incorrect infix";
+			}
+			else if(count!=0) count--;
+		}
 		int index = 1;
 		int errors = 0;
 		for (char c : Infix) {
@@ -87,8 +125,9 @@ public:
 					errors++;
 					continue;
 				}
-				cout << nums.Top() << ' ' << index++ << endl;
+				else {cout << nums.Top() << ' ' << index++ << endl;
 				nums.Pop();
+				}
 			}
 		}
 		if (!nums.isEmpty()) {
@@ -191,4 +230,3 @@ public:
 			return res;
 	}
 };
-		
