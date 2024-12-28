@@ -10,17 +10,18 @@ int main() {
     std::cout << "Top element: " << myStack.Top() << std::endl;
 
     myStack.Pop();
-
+    
     std::cout << "Top element: " << myStack.Top() << std::endl;
 
     std::cout << "Stack size: " << myStack.size() << std::endl;
 
     TFormula a;
+   // a.isCorrect();
+    a.getMarks();
   //  a.FormulaChecker();
     a.FormulaConverter();
-    //cout << a.getPostfix() << endl;
-    //a.getSplit();
     a.getPostfix();
+   // a.getPostfix();
     cout << a.FormulaCalculator();
     return 0;
 }
