@@ -1,10 +1,12 @@
 #pragma once
-#include "TStack.h"
+#include "Stack.h"
 #include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <unordered_map>
 class TFormula {
+	string marks;
 	Stack<double> nums;
 	Stack<string> operators;
 	string Postfix;
@@ -13,6 +15,31 @@ class TFormula {
 	vector<string> splitExpression;
 	vector<string> postfix;
 public:
+	void getMarks() {
+		if (!isCorrect()) {
+			cout << Infix<<endl;
+			cout << marks<<endl;
+		}
+		else {
+			cout << Infix << endl;
+		}
+	}
+	bool isBrace(string op) {
+		if (op == "(" || op == ")") return true;
+		return false;
+	}
+	bool isBrace(char op) {
+		if (op == '(' || op == ')') return true;
+		return false;
+	}
+	bool isOperator(char op) {
+		if (op == '*' || op == '/' || op ==  '+' || op == '-') return true;
+		return false;
+	}
+	bool isOperator(string op) {
+		if (op == "*" || op == "/" || op == "+" || op == "-") return true;
+		return false;
+	}
 	void getSplit(){
 		for (size_t i = 0; i < splitExpression.size(); i++) {
 			cout << splitExpression[i]<<i<<endl;
@@ -39,36 +66,45 @@ public:
 	TFormula() {
 		cout << "Input infix" << endl;
 		getline(cin, Infix);
+		bool lastWasOperator = true;
 		string space;
+
 		int count = 0;
+		int flag = 0;
 		for(char c : Infix){
-			if(c=='('){ count = 1;
-			space+=c;
-			continue;
+			if (!isOperator(c) && c != ' ' && flag == 0 || isdigit(c) || isBrace(c)) {
+				flag = 1;
+				space += c;
+				continue;
 			}
-			else if(c!=')') count = 0;
-			if (c == ')' && count == 1) throw "error";
-			if(c!= ' '){
+			else if(isOperator(c)){
+				flag = 0;
+				space += c;
+				continue;
+			}
+			if(c!= ' ' && flag == 0){
 				space+=c;
+				count++;
+				continue;
+			}
+			else if(c != ' ' && flag != 0 && !isdigit(c)) {
+				space += ' ';
+				space += c;
 				continue;
 			}
 		}
 		Infix = space;
-		//cout<<Infix;
 		string tmp = "";
-		// Ñîçäàòü ñëîâàðü äëÿ õðàíåíèÿ çíà÷åíèé áóêâ
-		map<char, int> values;
 
-		// Çàïðîñèòü çíà÷åíèÿ áóêâ ó ïîëüçîâàòåëÿ
-		for (char c : Infix) {
+		/*for (char c : Infix) {
 			if (isalpha(c)) {
 				cout << "input value of " << c << ": ";
-				 float value;
+				 char value;
 				cin >> value;
+				if (!isdigit(value)) throw "its not a digit";
 				values[c] = value;
 			}
 		}
-		// Ïðåîáðàçîâàòü âûðàæåíèå â öèôðû
 		string result;
 		for (char c : Infix) {
 			if (isalpha(c)) {
@@ -80,13 +116,44 @@ public:
 				result += c;
 			}
 		}
-		Infix = result;
-		cout<<Infix;
-		for (char c : Infix) {
+		Infix = result;*/
+		for (size_t i = 0; i < Infix.size(); i++) {
+			char c = Infix[i];
+			if (c == '(') {
+				splitExpression.push_back(tmp);
+				tmp = "";
+				splitExpression.push_back("("); continue;
+			}
 			if (isdigit(c)) {
 				tmp += c;
 			}
 			else {
+				if (c == '-' ) {
+					if (i == 0) {
+						tmp = c; continue;
+					}
+					else {
+						if (splitExpression[i - 1] == "(") tmp = c; continue;
+					}
+				}
+				if (tmp != "")splitExpression.push_back(tmp);
+				tmp = "";
+				tmp += c;
+				splitExpression.push_back(tmp);
+				tmp = "";
+			}
+		}
+		splitExpression.push_back(tmp);
+		if (splitExpression.back() == "") splitExpression.pop_back();
+		/*for (char c : Infix) {
+			if (c == '(') int count = 1;
+			if (isdigit(c)) {
+				tmp += c;
+			}
+			else {
+				if (c == '-' && count == 1) {
+					tmp += c;
+				}
 				if(tmp!="")splitExpression.push_back(tmp);
 				tmp = "";
 				tmp += c;
@@ -95,10 +162,125 @@ public:
 			}
 		}
 		splitExpression.push_back(tmp);
-		if(splitExpression.back()=="") splitExpression.pop_back();
+		if(splitExpression.back()=="") splitExpression.pop_back();*/
 	}
 	TFormula(const TFormula& a) : Postfix(a.Postfix), Infix(a.Infix) {
-
+		
+	}
+	bool FormulaCheckerBraces() {
+		marks.resize(Infix.size(),' ');
+		size_t count = 0;
+		size_t negative = 0;
+		Stack<int> ind;
+		for (size_t i = 0; i < Infix.size(); i++) {
+			if (Infix[i] == '(') {
+				if (i == Infix.size() - 1) {
+					marks[i] = '^'; break;
+				}
+				if (Infix[i + 1] == ')') marks[i] = '^';
+				count++;
+				ind.Push(i);
+			}
+			if (Infix[i] == ')') {
+				if (count <= 0) {
+					ind.Push(i);
+					count--;
+				}
+				else {
+					count--;
+					ind.Pop();
+				}
+			}
+		}
+			if (!ind.isEmpty()) {
+				while (!ind.isEmpty()) {
+					marks[ind.Top()] = '^';
+					ind.Pop();
+				}
+			}
+		return count == 0 ? true : false;
+	}
+	bool isCorrect() {
+		return (FormulaCheckerBraces() && FormulaCheckerOperators() && FormulaCheckerOperands());
+	}
+	bool FormulaCheckerOperators() {
+		size_t flag = 0;
+		for (size_t i = 0; i < Infix.size(); i++) {
+			if (Infix[i] == ' ') {
+				marks[i] = '^';
+				flag = 1;
+				continue; 
+			}
+			if (isOperator(Infix[i]) && isOperator(splitExpression[i]) && i==0) {
+				marks[0] = '^'; flag = 1; continue;
+			}
+			if (isOperator(Infix[i])) {
+				if (i == Infix.size() - 1) {
+					marks[i] = '^'; flag = 1; continue;
+				}
+				else {
+					if (isOperator(Infix[i + 1])) {
+						marks[i + 1] = '^'; flag = 1; continue;
+					}
+				}
+			}
+		}
+		return flag == 0 ? true : false;
+	}
+	bool FormulaCheckerOperands() {
+			string tmp = "";
+		size_t flag = 0;
+		unordered_map<char, int> values;
+		for (char c : Infix) {
+			if (isalpha(c)) {
+					char value;
+				if (values.find(c) == values.end()) {
+					cout << "input value of " << c << ": ";
+					cin >> value;
+					if (!isdigit(value)) throw "its not a digit";
+					values[c] = value - '0';
+				}
+			}
+		}
+		string result;
+		for (char c : Infix) {
+			if (isalpha(c)) {
+				result += to_string(values[c]);
+			}
+			else {
+				result += c;
+			}
+		}
+		Infix = result;
+		splitExpression.resize(0);
+		for (size_t i = 0; i < Infix.size(); i++) {
+			char c = Infix[i];
+			if (c == '(') {
+				tmp = "";
+				splitExpression.push_back("("); continue;
+			}
+			if (isdigit(c)) {
+				tmp += c;
+			}
+			else {
+				if (c == '-') {
+					if (i == 0) {
+						tmp = c; continue;
+					}
+					else {
+						if (splitExpression[i - 1] == "(") tmp = c; continue;
+					}
+				}
+				if (tmp != "")splitExpression.push_back(tmp);
+				tmp = "";
+				tmp += c;
+				splitExpression.push_back(tmp);
+				tmp = "";
+			}
+		}
+		splitExpression.push_back(tmp);
+		if (splitExpression.back() == "") splitExpression.pop_back();
+		return flag == 0 ? true : false;
 	}
 	bool FormulaChecker() {
 		size_t count = 0;
@@ -141,7 +323,7 @@ public:
 		return errors == 0 ? true : false;
 	}
 	void FormulaConverter() {
-		if (!FormulaChecker()) throw "incorrect Postfix";
+		if (!isCorrect()) throw "incorrect Postfix";
 		for (string& token : splitExpression) {
 			if (getPrecedence(token) == 0) {
 				postfix.push_back(token); continue;
