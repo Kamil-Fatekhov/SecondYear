@@ -3,13 +3,13 @@
 #include <cctype>
 #include <sstream>
 #include <unordered_map>
-#include <algorithm> 
-#include <cmath> 
+#include <algorithm> // Для std::unique
+#include <cmath> //Для pow()
 #include <vector>
 
 using namespace std;
 
-
+// Реализация стека на основе массива фиксированного размера
 template <typename T>
 class MyStack {
 private:
@@ -23,6 +23,7 @@ public:
         data = new T[capacity]; // Выделяем память под массив
     }
 
+    // Деструктор (важно освободить память!)
     ~MyStack() {
         delete[] data; // Освобождаем выделенную память
     }
@@ -157,35 +158,38 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
     MyStack<double> numbers(expression.length()); //Стек чисел.
     MyStack<char> operators(expression.length()); //Стек операторов.
     string token;
-    bool lastWasOperator = true; // Добавляем флаг
+    bool lastWasOperator = true; // Флаг для отслеживания унарного минуса
 
     for (int i = 0; i < expression.length(); ++i) {
         char c = expression[i];
 
-        if (isdigit(c) || (c == '-' && lastWasOperator && (token.empty() || !isalpha(expression[i - 1])))) {  // Обработка отрицательных чисел и последовательности минусов
+        if (isdigit(c) || (c == '-' && lastWasOperator && (token.empty() || !isalpha(expression[i - 1])))) {
+            // Если это цифра, '-' (для отрицательного числа) или буква (переменная)
             token += c;
-            lastWasOperator = false; // После цифры или буквы оператора нет
+            lastWasOperator = false; // Теперь ждем не оператор
         }
         else {
             if (!token.empty()) {
+                // Если токен накопился, преобразуем его в число и помещаем в стек чисел
                 double numValue;
                 if (isdigit(token[0]) || (token[0] == '-' && token.length() > 1 && isdigit(token[1]))) {
-                    numValue = stod(token);
+                    numValue = stod(token); // Преобразуем в double
                 }
                 else {
-                    numValue = variables.at(token[0]);
+                    numValue = variables.at(token[0]); // Получаем значение переменной
                 }
                 numbers.push(numValue);
                 rpnOutput.push_back(token); //Добавляем число/переменную в RPN
                 token = "";
             }
-            if (c == ' ') continue;
+            if (c == ' ') continue; // Пропускаем пробелы
 
             if (c == '(') {
-                operators.push(c);
-                lastWasOperator = true;
+                operators.push(c); // Открывающую скобку помещаем в стек операторов
+                lastWasOperator = true; // После скобки ждем операнд
             }
             else if (c == ')') {
+                // Закрывающая скобка: выталкиваем операторы из стека до открывающей скобки
                 while (!operators.isEmpty() && operators.top() != '(') {
                     char op = operators.pop();
                     double operand2 = numbers.pop();
@@ -198,7 +202,13 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
                     case '+': result = operand1 + operand2; break;
                     case '-': result = operand1 - operand2; break;
                     case '*': result = operand1 * operand2; break;
-                    case '/': result = operand1 / operand2; break;
+                    case '/':
+                        if (operand2 == 0) {
+                            cout << "Division by zero." << endl;
+                            return 0; // Возвращаем 0 в случае ошибки
+                        }
+                        result = operand1 / operand2;
+                        break;
                     case '^': result = pow(operand1, operand2); break; //Возведение в степень
                     }
                     numbers.push(result);
@@ -213,9 +223,10 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
                     return 0;
 
                 }
-                    lastWasOperator = false;
+                lastWasOperator = false;
             }
             else {
+                // Обрабатываем операторы
                 while (!operators.isEmpty() && precedence(c) <= precedence(operators.top())) {
                     char op = operators.pop();
                     double operand2 = numbers.pop();
@@ -228,18 +239,25 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
                     case '+': result = operand1 + operand2; break;
                     case '-': result = operand1 - operand2; break;
                     case '*': result = operand1 * operand2; break;
-                    case '/': result = operand1 / operand2; break;
+                    case '/':
+                        if (operand2 == 0) {
+                            cout << "Ошибка: Деление на ноль." << endl;
+                            return 0; // Возвращаем 0 в случае ошибки
+                        }
+                        result = operand1 / operand2;
+                        break;
                     case '^': result = pow(operand1, operand2); break; //Возведение в степень
                     }
                     numbers.push(result);
                 }
-                operators.push(c);
+                operators.push(c); // Помещаем текущий оператор в стек
                 lastWasOperator = true; // После оператора ждем операнд
             }
         }
     }
 
     if (!token.empty()) {
+        // Если после обработки выражения остался токен, преобразуем его в число
         double numValue;
         if (isdigit(token[0]) || (token[0] == '-' && token.length() > 1 && isdigit(token[1]))) {
             numValue = stod(token);
@@ -251,6 +269,7 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
         rpnOutput.push_back(token); //Добавляем число/переменную в RPN
     }
 
+    // Выталкиваем все оставшиеся операторы из стека
     while (!operators.isEmpty()) {
         char op = operators.pop();
         double operand2 = numbers.pop();
@@ -263,7 +282,13 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
         case '+': result = operand1 + operand2; break;
         case '-': result = operand1 - operand2; break;
         case '*': result = operand1 * operand2; break;
-        case '/': result = operand1 / operand2; break;
+        case '/':
+            if (operand2 == 0) {
+                cout << "Ошибка: Деление на ноль." << endl;
+                return 0; // Возвращаем 0 в случае ошибки
+            }
+            result = operand1 / operand2;
+            break;
         case '^': result = pow(operand1, operand2); break; //Возведение в степень
         }
         numbers.push(result);
@@ -275,8 +300,9 @@ double evaluateExpression(const string& expression, const unordered_map<char, do
         return 0;
     }
 
-    return numbers.top();
+    return numbers.top(); // Результат вычисления находится на вершине стека
 }
+
 int main() {
     string expression;
     string errorHighlights;
