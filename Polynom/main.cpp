@@ -1,131 +1,250 @@
 #include <iostream>
-#include <vector>
-#include "Monom.h"
+#include <string>
+#include <cmath>
+
+// –£–∑–µ–ª –æ–¥–Ω–æ—Å–≤—è–∑–Ω–æ–≥–æ —Å–ø–∏—Å–∫–∞
+template <typename T>
+class Node {
+public:
+    T data;
+    Node* next;
+
+    Node(T data) : data(data), next(nullptr) {}
+};
+
+// –ú–æ–Ω–æ–º
+class Monom {
+public:
+    double coefficient; // –ö–æ—ç—Ñ—Ñ–∏—Ü–∏–µ–Ω—Ç
+    int x_power;        // –°—Ç–µ–ø–µ–Ω—å –ø–µ—Ä–µ–º–µ–Ω–Ω–æ–π x
+    int y_power;        // –°—Ç–µ–ø–µ–Ω—å –ø–µ—Ä–µ–º–µ–Ω–Ω–æ–π y
+    int z_power;        // –°—Ç–µ–ø–µ–Ω—å –ø–µ—Ä–µ–º–µ–Ω–Ω–æ–π z
+
+    Monom(double coeff = 0.0, int x = 0, int y = 0, int z = 0)
+        : coefficient(coeff), x_power(x), y_power(y), z_power(z) {}
+
+    // –£–º–Ω–æ–∂–µ–Ω–∏–µ –º–æ–Ω–æ–º–æ–≤
+    Monom operator*(const Monom& other) const {
+        return Monom(
+            coefficient * other.coefficient,
+            x_power + other.x_power,
+            y_power + other.y_power,
+            z_power + other.z_power
+        );
+    }
+
+    // –î–µ–ª–µ–Ω–∏–µ –º–æ–Ω–æ–º–æ–≤
+    Monom operator/(const Monom& other) const {
+        return Monom(
+            coefficient / other.coefficient,
+            x_power - other.x_power,
+            y_power - other.y_power,
+            z_power - other.z_power
+        );
+    }
+
+    // –í–æ–∑–≤–µ–¥–µ–Ω–∏–µ –º–æ–Ω–æ–º–∞ –≤ —Å—Ç–µ–ø–µ–Ω—å
+    Monom pow(int power) const {
+        return Monom(
+            std::pow(coefficient, power),
+            x_power * power,
+            y_power * power,
+            z_power * power
+        );
+    }
+
+    // –ü—Ä–æ–≤–µ—Ä–∫–∞ –Ω–∞ —Ä–∞–≤–µ–Ω—Å—Ç–≤–æ –º–æ–Ω–æ–º–æ–≤ (–¥–ª—è —É–ø—Ä–æ—â–µ–Ω–∏—è –ø–æ–ª–∏–Ω–æ–º–æ–≤)
+    bool operator==(const Monom& other) const {
+        return x_power == other.x_power &&
+               y_power == other.y_power &&
+               z_power == other.z_power;
+    }
+
+    // –í—ã–≤–æ–¥ –º–æ–Ω–æ–º–∞
+    void print() const {
+        std::cout << coefficient;
+        if (x_power > 0) std::cout << "x^" << x_power;
+        if (y_power > 0) std::cout << "y^" << y_power;
+        if (z_power > 0) std::cout << "z^" << z_power;
+    }
+};
+
+// –ü–æ–ª–∏–Ω–æ–º
+class Polynomial {
+private:
+    Node<Monom>* head;
+
+    // –£–ø—Ä–æ—â–µ–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–∞ (—Å–ª–æ–∂–µ–Ω–∏–µ –æ–¥–∏–Ω–∞–∫–æ–≤—ã—Ö –º–æ–Ω–æ–º–æ–≤)
+    void simplify() {
+        Node<Monom>* current = head;
+        while (current) {
+            Node<Monom>* runner = current->next;
+            Node<Monom>* prev = current;
+            while (runner) {
+                if (current->data == runner->data) {
+                    current->data.coefficient += runner->data.coefficient;
+                    prev->next = runner->next;
+                    delete runner;
+                    runner = prev->next;
+                } else {
+                    prev = runner;
+                    runner = runner->next;
+                }
+            }
+            current = current->next;
+        }
+    }
+
+public:
+    Polynomial() : head(nullptr) {}
+
+    ~Polynomial() {
+        while (head) {
+            Node<Monom>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+
+    // –î–æ–±–∞–≤–ª–µ–Ω–∏–µ –º–æ–Ω–æ–º–∞ –≤ –ø–æ–ª–∏–Ω–æ–º
+    void addMonom(const Monom& monom) {
+        Node<Monom>* newNode = new Node<Monom>(monom);
+        if (!head) {
+            head = newNode;
+        } else {
+            Node<Monom>* current = head;
+            while (current->next) {
+                current = current->next;
+            }
+            current->next = newNode;
+        }
+        simplify(); // –£–ø—Ä–æ—â–∞–µ–º –ø–æ–ª–∏–Ω–æ–º –ø–æ—Å–ª–µ –¥–æ–±–∞–≤–ª–µ–Ω–∏—è
+    }
+
+    // –°–ª–æ–∂–µ–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–æ–≤
+    Polynomial operator+(const Polynomial& other) const {
+        Polynomial result;
+        Node<Monom>* current = head;
+        while (current) {
+            result.addMonom(current->data);
+            current = current->next;
+        }
+        current = other.head;
+        while (current) {
+            result.addMonom(current->data);
+            current = current->next;
+        }
+        return result;
+    }
+
+    // –í—ã—á–∏—Ç–∞–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–æ–≤
+    Polynomial operator-(const Polynomial& other) const {
+        Polynomial result;
+        Node<Monom>* current = head;
+        while (current) {
+            result.addMonom(current->data);
+            current = current->next;
+        }
+        current = other.head;
+        while (current) {
+            Monom temp = current->data;
+            temp.coefficient *= -1;
+            result.addMonom(temp);
+            current = current->next;
+        }
+        return result;
+    }
+
+    // –£–º–Ω–æ–∂–µ–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–æ–≤
+    Polynomial operator*(const Polynomial& other) const {
+        Polynomial result;
+        Node<Monom>* current1 = head;
+        while (current1) {
+            Node<Monom>* current2 = other.head;
+            while (current2) {
+                result.addMonom(current1->data * current2->data);
+                current2 = current2->next;
+            }
+            current1 = current1->next;
+        }
+        return result;
+    }
+
+    // –î–µ–ª–µ–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–æ–≤ (—É–ø—Ä–æ—â–µ–Ω–Ω–æ–µ, –±–µ–∑ –æ—Å—Ç–∞—Ç–∫–∞)
+    Polynomial operator/(const Polynomial& other) const {
+        Polynomial result;
+        Node<Monom>* current1 = head;
+        while (current1) {
+            Node<Monom>* current2 = other.head;
+            while (current2) {
+                result.addMonom(current1->data / current2->data);
+                current2 = current2->next;
+            }
+            current1 = current1->next;
+        }
+        return result;
+    }
+
+    // –í–æ–∑–≤–µ–¥–µ–Ω–∏–µ –ø–æ–ª–∏–Ω–æ–º–∞ –≤ —Å—Ç–µ–ø–µ–Ω—å
+    Polynomial pow(int power) const {
+        Polynomial result;
+        Node<Monom>* current = head;
+        while (current) {
+            result.addMonom(current->data.pow(power));
+            current = current->next;
+        }
+        return result;
+    }
+
+    // –í—ã–≤–æ–¥ –ø–æ–ª–∏–Ω–æ–º–∞
+    void print() const {
+        Node<Monom>* current = head;
+        while (current) {
+            current->data.print();
+            if (current->next) {
+                std::cout << " + ";
+            }
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+};
 
 int main() {
-    // œËÏÂ ËÒÔÓÎ¸ÁÓ‚‡ÌËˇ Manom
-    cout << "Demonstration of Manom class:\n";
+    Monom m1(5, 2, 3, 1); // 5x^2y^3z^1
+    Monom m2(3, 1, 2, 0);  // 3x^1y^2
 
-    // —ÓÁ‰‡ÌËÂ ÏÓÌÓÏÓ‚
-    int powersA[] = { 2, 3 };
-    Manom monomA(2.0, 2, powersA);
-    cout << "Monom A = ";
-    monomA.print();
+    Polynomial p1;
+    p1.addMonom(m1);
+    p1.addMonom(m2);
 
-    int powersB[] = { 1, 2 };
-    Manom monomB(3.0, 2, powersB);
-    cout << endl << "Monom B = ";
-    monomB.print();
+    Polynomial p2;
+    p2.addMonom(m1);
 
-    int powersC[] = { 2, 3 };
-    Manom monomC(1.0, 2, powersC);
-    cout << endl << "Monom C = ";
-    monomC.print();
-
-    int powersD[] = { 1, 2 };
-    Manom monomD(2.0, 2, powersD);
-    cout << endl << "Monom D = ";
-    monomD.print();
-
-
-    // ŒÔÂ‡ˆËË Ò ÏÓÌÓÏ‡ÏË
-    try {
-        Manom sumMonom = monomA + monomC;
-        cout << endl << "A + C = ";
-        sumMonom.print();
-        Manom subMonom = monomA - monomC;
-        cout << endl << "A - C = ";
-        subMonom.print();
-    }
-    catch (const char* ex) {
-        cout << ex << endl;
-    }
-
-
-    try {
-        Manom sumMonom = monomA + monomB;
-        cout << "A + B = ";
-        sumMonom.print();
-    }
-    catch (const char* ex) {
-        cout << "A + B = ";
-        cout << ex << endl;
-    }
-
-    Manom productMonom = monomA * monomB;
-    cout << endl << "A * B = ";
-    productMonom.print();
-    Manom divisionMonom = monomA / monomB;
-    cout << endl << "A / B = ";
-    divisionMonom.print();
-
-    // ¬˚˜ËÒÎÂÌËÂ ÁÌ‡˜ÂÌËˇ ÏÓÌÓÏ‡
-    std::vector<double> values = { 2.0, 3.0 };
-    double resultA = monomA.evaluate(values);
-    cout << endl << "A(2,3) = " << resultA << endl;
-
-    // œËÏÂ ËÒÔÓÎ¸ÁÓ‚‡ÌËˇ inputFromConsole
-    cout << "\nDemonstration of Polynom class:\n";
-    Polynom p3 = Polynom::inputFromConsole();
-    cout << "You entered: ";
-    p3.print();
-
-    // ŒÒÚ‡Î¸ÌÓÈ ÍÓ‰ ‰Îˇ ÔÓ‚ÂÍË
-    int powers1[] = { 2, 3 };
-    int powers2[] = { 1, 2 };
-    int powers3[] = { 2, 3 };
-    int powers4[] = { 4, 1 };
-    Manom m1(2.0, 2, powers1);
-    Manom m2(3.0, 2, powers2);
-    Manom m3(1.0, 2, powers3);
-    Manom m4(4.0, 2, powers4);
-
-    // —ÓÁ‰‡ÌËÂ ÔÓÎËÌÓÏÓ‚
-    Polynom p1;
-    p1.insertEnd(m1);
-    p1.insertEnd(m2);
-
-    Polynom p2;
-    p2.insertEnd(m3);
-    p2.insertEnd(m4);
-
-    cout << "p1 = ";
+    std::cout << "Polynomial 1: ";
     p1.print();
-    cout << "p2 = ";
+    std::cout << "Polynomial 2: ";
     p2.print();
 
-    // —ÎÓÊÂÌËÂ ÔÓÎËÌÓÏÓ‚
-    Polynom sum = p1 + p2;
-    cout << "p1 + p2 = ";
-    sum.print();
+    Polynomial p3 = p1 + p2;
+    std::cout << "p1 + p2: ";
+    p3.print();
 
-    // ¬˚˜ËÚ‡ÌËÂ ÔÓÎËÌÓÏÓ‚
-    Polynom diff = p1 - p2;
-    cout << "p1 - p2 = ";
-    diff.print();
-
-    // ”ÏÌÓÊÂÌËÂ ÔÓÎËÌÓÏÓ‚
-    Polynom product = p1 * p2;
-    cout << "p1 * p2 = ";
-    product.print();
-
-    //  ÓÔËÓ‚‡ÌËÂ ÔÓÎËÌÓÏ‡
-    Polynom p4 = p1;
-    cout << "p4 = ";
+    Polynomial p4 = p1 - p2;
+    std::cout << "p1 - p2: ";
     p4.print();
 
-    // ¬˚˜ËÒÎÂÌËÂ ÁÌ‡˜ÂÌËˇ ÔÓÎËÌÓÏ‡
-    double result = p1.evaluate(values);
-    cout << "p1(2,3) = " << result << endl;
+    Polynomial p5 = p1 * p2;
+    std::cout << "p1 * p2: ";
+    p5.print();
 
-    std::vector<double> values2 = { 2.0, 3.0 };
-    double result2 = p2.evaluate(values2);
-    cout << "p2(2,3) = " << result2 << endl;
+    Polynomial p6 = p1 / p2;
+    std::cout << "p1 / p2: ";
+    p6.print();
 
-    // ”‰‡ÎÂÌËÂ ÔÓÎËÌÓÏ‡ 
-    p1 = Polynom();
-    cout << "p1 after delete = ";
-    p1.print();
+    Polynomial p7 = p1.pow(2);
+    std::cout << "p1^2: ";
+    p7.print();
 
     return 0;
 }
