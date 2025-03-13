@@ -1,11 +1,18 @@
 #include "TFormula.h"
+#include <locale.h>
 
-int main(){
-    cout<<"input polinom"<<endl;
-    string polinom;
-    cin>>polinom;
-    TFormula<int> a(polinom);
-    a.FormulaChecker();
-    cout<<endl<<a.FormulaConverter();
+int main() {
+    setlocale(LC_ALL, "ru");
+
+    TFormula a;
+    try {
+        a.FormulaConverter();
+        a.getPostfix();
+        cout << "Result: " << a.FormulaCalculator() << endl;
+    }
+    catch (const char* msg) {
+        cerr << msg << endl;
+    }
+
     return 0;
 }
